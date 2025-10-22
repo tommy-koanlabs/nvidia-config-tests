@@ -1,51 +1,8 @@
 # NVIDIA Driver & GRUB Configuration Quick Guide
 
-## Changing NVIDIA Driver Versions
+## NVIDIA Driver Installation & Removal
 
-### Arch Linux / Manjaro
-
-**Check available drivers:**
-```bash
-pacman -Ss nvidia
-```
-
-**Install specific version:**
-```bash
-# Latest stable
-sudo pacman -S nvidia nvidia-utils nvidia-settings
-
-# LTS kernel
-sudo pacman -S nvidia-lts
-
-# DKMS (works with all kernels)
-sudo pacman -S nvidia-dkms nvidia-utils nvidia-settings
-```
-
-**Downgrade to specific version:**
-```bash
-# Search AUR archive
-yay -S downgrade
-sudo downgrade nvidia
-
-# Or manually specify
-sudo pacman -U /var/cache/pacman/pkg/nvidia-<version>.pkg.tar.zst
-```
-
-**Pin version (prevent updates):**
-```bash
-# Edit /etc/pacman.conf
-sudo nano /etc/pacman.conf
-
-# Add line:
-IgnorePkg = nvidia nvidia-utils
-```
-
-### Ubuntu / Debian / Linux Mint
-
-**List available drivers:**
-```bash
-ubuntu-drivers list
-```
+### Ubuntu / Debian / KDE Neon
 
 **Install recommended driver:**
 ```bash
@@ -54,14 +11,8 @@ sudo ubuntu-drivers autoinstall
 
 **Install specific version:**
 ```bash
-# Show available
 apt search nvidia-driver
-
-# Install specific (e.g., 535)
-sudo apt install nvidia-driver-535
-
-# Or use GUI
-software-properties-gtk
+sudo apt install nvidia-driver-550
 ```
 
 **Remove NVIDIA drivers:**
@@ -70,88 +21,31 @@ sudo apt purge nvidia-* libnvidia-*
 sudo apt autoremove
 ```
 
-### Fedora
-
-**List available:**
+**Verify installation:**
 ```bash
-dnf list nvidia-driver
-```
-
-**Install from RPM Fusion:**
-```bash
-# Enable RPM Fusion repos first
-sudo dnf install akmod-nvidia
-sudo dnf install xorg-x11-drv-nvidia-cuda  # For CUDA
-```
-
-### Verify Installation
-
-```bash
-# Check driver version
 nvidia-smi
-
-# Check loaded module
 lsmod | grep nvidia
-
-# Check kernel module version
-modinfo nvidia
 ```
 
-## Setting GRUB Parameters
+## Changing GRUB Boot Parameters
 
-### Method 1: Edit GRUB Configuration (Persistent)
+### Edit GRUB Configuration (Persistent)
 
-**1. Edit GRUB defaults:**
+**1. Edit GRUB file:**
 ```bash
 sudo nano /etc/default/grub
 ```
 
-**2. Find the line starting with:**
+**2. Find and modify:**
 ```
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"
 ```
 
-**3. Add your parameters inside the quotes:**
+**3. Add your parameters inside the quotes, then save.**
 
-**For Intel + NVIDIA (LOQ 15IRH8):**
-```
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia_drm.modeset=1"
-```
-
-**For AMD + NVIDIA (LOQ 15APH8):**
-```
-GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia_drm.modeset=1 video=2560x1600-32@60"
-```
-
-**Common parameter combinations:**
-```
-# Basic (most systems)
-nvidia_drm.modeset=1
-
-# With GSP firmware disabled (driver 555+ issues)
-nvidia_drm.modeset=1 nvidia.NVreg_EnableGpuFirmware=0
-
-# With suspend/resume support
-nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1
-
-# AMD hybrid with specific resolution
-nvidia_drm.modeset=1 video=1920x1080-32@60
-
-# Complete LOQ configuration
-nvidia_drm.modeset=1 nvidia.NVreg_EnableGpuFirmware=0 quiet splash
-```
-
-**4. Update GRUB:**
-
+**4. Update GRUB (Ubuntu/Debian):**
 ```bash
-# Arch / Manjaro
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-
-# Ubuntu / Debian / Mint
 sudo update-grub
-
-# Fedora
-sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
 
 **5. Reboot:**
@@ -159,205 +53,235 @@ sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 sudo reboot
 ```
 
-### Method 2: Temporary Boot Parameter (Testing)
-
-**1. During boot, press:**
-- `Shift` (BIOS/MBR systems) or
-- `Esc` (UEFI systems)
-
-**2. Highlight your boot entry and press `e`**
-
-**3. Find line starting with `linux`:**
-```
-linux /boot/vmlinuz-linux root=UUID=... quiet splash
-```
-
-**4. Add parameters at the end before `quiet splash`:**
-```
-linux /boot/vmlinuz-linux root=UUID=... nvidia_drm.modeset=1 quiet splash
-```
-
-**5. Press `Ctrl+X` or `F10` to boot**
-
-Note: Changes are temporary and will be lost after reboot.
-
-### Method 3: systemd-boot (Alternative bootloader)
-
-**Edit boot entry:**
-```bash
-sudo nano /boot/loader/entries/arch.conf
-```
-
-**Add to options line:**
-```
-options root=PARTUUID=... rw nvidia_drm.modeset=1
-```
-
-## Module Configuration (Alternative to GRUB)
-
-### Create modprobe configuration:
-
-```bash
-sudo nano /etc/modprobe.d/nvidia.conf
-```
-
-**Add common options:**
-```
-options nvidia_drm modeset=1
-options nvidia_drm fbdev=1
-options nvidia NVreg_EnableGpuFirmware=0
-options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
-```
-
-**Regenerate initramfs:**
-
-```bash
-# Arch / Manjaro
-sudo mkinitcpio -P
-
-# Ubuntu / Debian
-sudo update-initramfs -u
-
-# Fedora
-sudo dracut --force
-```
-
-## Verify Settings
-
-**Check active kernel parameters:**
+**Verify changes applied:**
 ```bash
 cat /proc/cmdline
 ```
 
-**Check if modeset is enabled:**
+### Change Default Kernel at Boot
+
+**Boot the newest kernel by default:**
 ```bash
-sudo cat /sys/module/nvidia_drm/parameters/modeset
-# Should show: Y
+sudo nano /etc/default/grub
+```
+Set:
+```
+GRUB_DEFAULT=0
+```
+Then update GRUB:
+```bash
+sudo update-grub
+sudo reboot
 ```
 
-**Check NVIDIA DRM status:**
-```bash
-sudo dmesg | grep -i nvidia
+**Boot a specific kernel by default:**
+
+First, list available kernels during boot by editing GRUB to show the menu (remove `GRUB_TIMEOUT_STYLE=hidden`), or check the menu structure. Then use the submenu index format:
+```
+GRUB_DEFAULT="1>2"
+```
+Where `1` is the submenu (e.g., "Advanced options") and `2` is the kernel index within that submenu.
+
+**Save last selected kernel and load it as default:**
+
+Edit `/etc/default/grub` and set:
+```
+GRUB_DEFAULT=saved
+GRUB_SAVEDEFAULT=true
 ```
 
-## Common GRUB Parameters for NVIDIA Issues
-
-| Parameter | Purpose | When to Use |
-|-----------|---------|-------------|
-| `nvidia_drm.modeset=1` | Enable kernel modesetting | **Always** (required for Wayland) |
-| `nvidia.NVreg_EnableGpuFirmware=0` | Disable GSP firmware | Driver 555+ issues (lag, crashes) |
-| `nvidia.NVreg_PreserveVideoMemoryAllocations=1` | Preserve VRAM on suspend | Black screen after resume |
-| `video=<res>-32@60` | Force video resolution | AMD+NVIDIA hybrid systems |
-| `nomodeset` | Disable all KMS | Emergency boot only |
-| `nouveau.modeset=0` | Disable nouveau | Installing proprietary drivers |
-
-## Troubleshooting
-
-**GRUB changes not applying:**
+Then update and reboot:
 ```bash
-# Verify syntax in /etc/default/grub
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-cat /proc/cmdline  # Check after reboot
+sudo update-grub
+sudo reboot
 ```
 
-**Driver not loading:**
-```bash
-# Check for conflicts
-lsmod | grep nouveau  # Should be empty if using nvidia
-sudo dmesg | grep -i nvidia  # Check for errors
+Now GRUB will remember whichever kernel you selected at the previous boot and boot that by default. You can change kernels at boot time using the GRUB menu (press Shift during boot), and your selection will be saved automatically.
+
+## Common GRUB Parameters for NVIDIA
+
+| Parameter | Purpose |
+|-----------|---------|
+| `nvidia_drm.modeset=1` | Enable kernel modesetting (required for Wayland) |
+| `nvidia.NVreg_EnableGpuFirmware=0` | Disable GSP firmware (fixes driver 555+ issues) |
+| `nvidia.NVreg_PreserveVideoMemoryAllocations=1` | Prevent black screen after resume |
+| `nomodeset` | Disable all kernel modesetting (emergency boot only) |
+| `nouveau.modeset=0` | Disable nouveau driver before installing proprietary |
+
+### Example Configurations
+
+**Basic NVIDIA setup:**
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia_drm.modeset=1"
 ```
 
-**Black screen after driver installation:**
-```bash
-# Boot with nomodeset
-# At GRUB: e → add nomodeset → Ctrl+X
-# Then fix driver or remove it
+**With suspend/resume support:**
+```
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1"
 ```
 
-**Rollback driver changes:**
-```bash
-# Arch - reinstall from cache
-sudo pacman -U /var/cache/pacman/pkg/nvidia-<old-version>.pkg.tar.zst
-
-# Ubuntu - install older version
-sudo apt install nvidia-driver-<version>
-
-# Or boot with old kernel that had working drivers
-```
-
-## Quick Reference: LOQ Laptop Configuration
-
-**Recommended GRUB line for Lenovo LOQ with RTX 4060:**
+**RTX 4060 Laptop (Lenovo LOQ):**
 ```
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash nvidia_drm.modeset=1 nvidia.NVreg_EnableGpuFirmware=0"
 ```
 
-**Required additional steps:**
-1. Set BIOS to **Hybrid Graphics** mode
-2. Install kernel 6.5+ (for Intel) or 6.8+ (for AMD)
-3. Install proprietary nvidia-driver-535 or newer
-4. For AMD variants: blacklist ideapad_laptop driver
-5. Use X11 compositor for best stability
+## Kernel Management
 
-## Managing Kernel Updates
+### Check Current Kernel
 
-### Installing Recommended Kernel (Ubuntu/KDE Neon)
+```bash
+uname -r
+```
+
+### List Available Kernels
+
+**Check what's installed:**
+```bash
+ls /boot/vmlinuz-*
+```
+
+**Search for available versions in repos:**
+```bash
+apt-cache madison linux-image-generic
+```
+
+**Show policy and versions:**
+```bash
+apt-cache policy linux-image-generic
+apt-cache policy linux-image-generic-hwe-24.04
+```
+
+### Install Kernels
 
 **Install latest recommended kernel:**
 ```bash
 sudo apt update && sudo apt install linux-generic
 ```
 
-The `linux-generic` meta-package always points to the recommended kernel for your distribution.
-
-**Verify recommended version before installing:**
+**Install HWE (Hardware Enablement) kernel for newer hardware:**
 ```bash
-apt-cache policy linux-generic
+sudo apt update && sudo apt install linux-generic-hwe-24.04
 ```
 
-**Check current kernel:**
+**Install from mainline GUI:**
 ```bash
-uname -r
+sudo apt install mainline
+sudo mainline
+```
+Then select kernel version in the GUI.
+
+**Install from mainline shell script (alternative):**
+```bash
+# Download and install script
+wget https://raw.githubusercontent.com/pimlie/ubuntu-mainline-kernel.sh/master/ubuntu-mainline-kernel.sh
+chmod +x ubuntu-mainline-kernel.sh
+sudo mv ubuntu-mainline-kernel.sh /usr/local/bin/
+
+# List available kernel series
+ubuntu-mainline-kernel.sh -r
+
+# Install latest kernel
+sudo ubuntu-mainline-kernel.sh -i
+
+# Install specific version
+sudo ubuntu-mainline-kernel.sh -i v6.14.0
 ```
 
-### Removing Kernel Package Holds
+### Remove Old Kernels
 
-If you've locked kernel packages for testing, you need to remove the hold before updating:
-
-**List all held packages:**
+**List held packages (locked kernels):**
 ```bash
 sudo apt-mark showhold
 ```
 
-**Remove hold from specific kernel version:**
+**Remove kernel hold:**
 ```bash
-# Example for kernel 6.8
+# Remove hold from specific kernel
 sudo apt-mark unhold linux-image-6.8.0-*-generic linux-headers-6.8.0-*-generic linux-modules-6.8.0-*-generic
-```
 
-**Remove hold from all kernel packages:**
-```bash
+# Remove all kernel holds
 sudo apt-mark unhold $(apt-mark showhold | grep linux-)
 ```
 
-**After removing hold, update normally:**
+**Remove old kernel packages:**
 ```bash
-sudo apt update && sudo apt upgrade
+sudo apt autoremove
 ```
 
-### Troubleshooting APT Locks
-
-**If apt is locked by packagekitd (KDE's package manager):**
+**Force remove specific old kernel version:**
 ```bash
-# Wait for packagekitd to finish, or kill it
-sudo killall packagekitd
+sudo apt purge linux-image-6.8.0-79-generic linux-headers-6.8.0-79-generic
+```
 
-# Then retry your apt command
+**Remove kernel installed via mainline script:**
+```bash
+# List installed kernels
+sudo ubuntu-mainline-kernel.sh -l
+
+# Remove a kernel (choose version interactively)
+sudo ubuntu-mainline-kernel.sh -u
+```
+
+### Manage Repositories
+
+**Enable proposed repository (testing packages):**
+```bash
+sudo add-apt-repository proposed
+sudo apt update
+```
+
+**Disable proposed repository:**
+```bash
+sudo add-apt-repository --remove proposed
+sudo apt update
+```
+
+**List all enabled repos:**
+```bash
+cat /etc/apt/sources.list
+ls /etc/apt/sources.list.d/
+```
+
+**Remove broken PPA:**
+```bash
+sudo add-apt-repository --remove ppa:username/ppa-name
+```
+
+**Remove repository by file:**
+```bash
+sudo rm /etc/apt/sources.list.d/repository-name.list
+sudo apt update
+```
+
+### Troubleshoot APT Lock Issues
+
+**If apt is locked by packagekitd (KDE package manager):**
+```bash
+sudo killall packagekitd
+sudo apt update
 ```
 
 **Common lock errors:**
 - `E: Could not get lock /var/lib/apt/lists/lock` - Another package manager is running
-- `It is held by process XXXX (packagekitd)` - KDE Discover or automatic updates are active
+- `It is held by process XXXX (packagekitd)` - KDE Discover or automatic updates active
+
+## Ubuntu 24.04 Official Kernel Versions
+
+### GA (General Availability) Kernel
+
+| Package | Actual Version | Release Type |
+|---------|----------------|--------------|
+| `linux-image-generic` | 6.8.0-x-generic | Original GA kernel (receives security updates) |
+
+### HWE (Hardware Enablement) Kernels
+
+| Package | Actual Version | Release Type |
+|---------|----------------|--------------|
+| `linux-image-generic-hwe-24.04` | 6.14.0-x-generic | Latest HWE (current default via rolling updates) |
+| `linux-image-generic-6.14` | 6.14.0-x-generic | HWE kernel 6.14 |
+| `linux-image-generic-6.11` | 6.11.0-x-generic | HWE kernel 6.11 |
+
+**Note:** `linux-image-generic-hwe-24.04` automatically tracks the newest available HWE kernel. As of now, it points to 6.14. Ubuntu's rolling HWE model means it will update to newer kernels as they're released.
 
 ---
 
