@@ -1,74 +1,161 @@
-# This is a shell script and process I used to debug my Nvidia driver issues on a Lenovo LOQ 15ARP9 running KDE Neon
-# The system refused to wakeup from a sleep state requiring a hard reset with the power button
-# The only thing that seems to make a real difference is downgrading the kernel version to 6.8; 6.14 and 6.11 dont work. I had to do a bunch of research and only found this tip in one place on an Arch forum, so I want to document this to help others
+# NVIDIA Driver Setup for KDE Neon (RTX 4060 Mobile)
+
+## Overview
+
+This documents the process I used to fix NVIDIA driver issues on a Lenovo LOQ 15ARP9 running KDE Neon. The system failed to wake from sleep (requiring hard reset) with newer kernels. After testing multiple kernel versions, only 6.8 worked reliably. Kernels 6.14 and 6.11 both had the same sleep/wake issues. I only found the kernel fix in an Arch forum after quite a bit of searching, and havent seen this tip elsewhere so I wanted to document it. 
+
+**System:** Lenovo LOQ 15ARP9
+**GPU:** NVIDIA GeForce RTX 4060 Mobile
+**OS:** KDE Neon (Ubuntu 24.04 base)
+**Working Kernel:** 6.8.0-86-generic
+**Working Driver:** 570.195.03
 
 
-# First run the shell script to document your system
-chmod +x ./check-graphics-config.sh
-sudo ./check-graphics-config.sh
+Originally I had a working configuration with 6.8 and 550, and it appeared that changing to X11 from Wayland fixed a lot of issues. However, I had to reinstall and ended up doing more testing. Right now it appears that Wayland does work along with the 570 driver so I am using that for now.
 
+## Disclaimer
 
-# Install new kernels:
-## I am installing 6.8 but you can test other kernels to see what works, replace the 6.8.0-86 in the apt search (or just the -86) to broaden the search
+These instructions worked on my specific hardware configuration. Always review commands before running them with sudo, especially when modifying system configurations or installing/removing packages. Your system may require different parameters or kernel versions.
+
+## Initial System Snapshot
+
+Run the configuration check script to document your current system state before making changes.
 
 ```bash
+# Make script executable
+chmod +x ./check-graphics-config.sh
+
+# Run configuration snapshot
+sudo ./check-graphics-config.sh
+```
+
+### Report Contents
+
+The script generates a timestamped report containing:
+
+- Operating System version and distribution info
+- Hardware information (system manufacturer, model)
+- Linux kernel version
+- Graphics information (nvidia-smi output, driver version, CUDA version)
+- Display protocol (X11/Wayland)
+- Package holds (pinned packages)
+- GRUB configuration
+- Current boot parameters
+- Modprobe configuration for NVIDIA
+- NVIDIA systemd service status
+
+
+## Install Target Kernel
+
+Install kernel 6.8.0-86. You can test other versions by modifying the version number in the search command.
+
+```bash
+# Search for available kernel packages
 apt search 'linux-headers.*6.8.0-86'
+
+# Install kernel headers and image
 sudo apt install linux-headers-6.8.0-86-generic linux-image-6.8.0-86-generic
 ```
 
+## Install NVIDIA Driver and Modules
 
-# Install modules:
+### Remove Existing NVIDIA Drivers
 
-**Remove NVIDIA drivers:**
 ```bash
+# Purge all NVIDIA packages
 sudo apt purge nvidia-* libnvidia-*
+
+# Remove leftover dependencies
 sudo apt autoremove
+```
 
+### Install NVIDIA Modules for Target Kernel
 
+```bash
+# Search for NVIDIA modules matching your kernel version
 apt search 'linux-modules-nvidia.*6.8.0-86'
+
+# Install NVIDIA modules for kernel 6.8.0-86
 sudo apt install linux-modules-nvidia-570-6.8.0-86-generic
 
-Check modules for kernel:
+# Verify modules are available for current kernel
 sudo apt-cache policy linux-modules-nvidia-570-$(uname -r)
 
-Install driver
+# Install NVIDIA driver 570
 sudo apt install nvidia-driver-570
+```
 
+### Pin Packages to Prevent Upgrades
 
-# Keep old working kernels and drivers:
+```bash
+# Hold all kernel 6.8.0-86 and NVIDIA 570 packages to prevent automatic updates
 sudo apt-mark hold $(dpkg -l | grep '^ii' | grep -E 'nvidia.*570|6\.8\.0-86' | awk '{print $2}')
 ```
-# These are the parameters Im using, see what works on your system. This is just an example
-# Modify modprobe settings
+
+## Configure NVIDIA Kernel Modules
+
+Edit `/etc/modprobe.d/nvidia.conf` and add the following parameters. These settings enable kernel modesetting, framebuffer support, disable GPU firmware (fixes driver 555+ issues), and enable video memory preservation for suspend/resume.
+
+```bash
 sudo nano /etc/modprobe.d/nvidia.conf
-# Add these lines:
+```
+
+Add these lines:
+
+```
 options nvidia_drm modeset=1
 options nvidia_drm fbdev=1
 options nvidia NVreg_EnableGpuFirmware=0
 options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
+```
 
-# Modify GRUB settings (only showing NVIDIA-relevant parameters below)
+## Configure GRUB Boot Parameters
+
+Edit `/etc/default/grub` to add NVIDIA parameters to the kernel command line. Only NVIDIA-relevant parameters are shown below.
+
+```bash
 sudo nano /etc/default/grub
-# Add to GRUB_CMDLINE_LINUX:
-GRUB_CMDLINE_LINUX="nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0"
+```
 
-# These settings will allow you to choose the default kernel in grub, you can change GRUB_TIMEOUT_STYLE to hidden once your system is working
+Add to `GRUB_CMDLINE_LINUX`:
+
+```
+GRUB_CMDLINE_LINUX="nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0"
+```
+
+Configure GRUB to remember kernel selection (allows choosing 6.8 as default):
+
+```
 GRUB_SAVEDEFAULT=true
 GRUB_DEFAULT=saved
 GRUB_TIMEOUT_STYLE=menu
+```
 
+Update GRUB configuration:
+
+```bash
 sudo update-grub
+```
 
-# Enable systemd services for suspend/resume support
+## Enable NVIDIA Power Management Services
+
+Enable systemd services required for proper suspend, hibernate, and resume functionality.
+
+```bash
 sudo systemctl enable nvidia-suspend.service
 sudo systemctl enable nvidia-hibernate.service
 sudo systemctl enable nvidia-resume.service
+```
 
-# Reboot to apply all changes
+## Apply Changes and Verify
+
+```bash
+# Reboot to load new kernel and driver configuration
 sudo reboot
 
-# After reboot, run the shell script again to verify the configuration
+# After reboot, verify configuration matches expected settings
 sudo ./check-graphics-config.sh
+```
 
 ## Common GRUB Parameters for NVIDIA
 
@@ -80,33 +167,20 @@ sudo ./check-graphics-config.sh
 | `nomodeset` | Disable all kernel modesetting (emergency boot only) |
 | `nouveau.modeset=0` | Disable nouveau driver before installing proprietary |
 
-## Ubuntu 24.04 Official Kernel Versions
+## Driver Version Pinning Tool
 
-### GA (General Availability) Kernel
+The `nvidia-pin-toggle.sh` script manages apt pinning to control NVIDIA driver version upgrades. Use with caution, I had Claude write this and ended up not needing it so it hasnt been extensively tested. The 550 driver was originally the version that worked for me but Nvidia no longer supports it. Apt install will try to install the newest (580) driver instead. Eventually I found that 570 works so I abandoned this.
 
-| Package | Actual Version | Release Type |
-|---------|----------------|--------------|
-| `linux-image-generic` | 6.8.0-x-generic | Original GA kernel (receives security updates) |
-
-### HWE (Hardware Enablement) Kernels
-
-| Package | Actual Version | Release Type |
-|---------|----------------|--------------|
-| `linux-image-generic-hwe-24.04` | 6.14.0-x-generic | Latest HWE (current default via rolling updates) |
-| `linux-image-generic-6.14` | 6.14.0-x-generic | HWE kernel 6.14 |
-| `linux-image-generic-6.11` | 6.11.0-x-generic | HWE kernel 6.11 
-
-# Additional script blocks installing 580 packages, I had claude write this and didnt need it so use caution. Originally was intended to allow me to install the 550 driver without it being overwritten by 580
 ```bash
-Enable pin (block 580):
+# Block driver 580 upgrades
 sudo ./nvidia-pin-toggle.sh enable
 
-Disable pin (allow 580):
+# Allow driver 580 upgrades
 sudo ./nvidia-pin-toggle.sh disable
 
-Check status:
+# Check current pin status
 ./nvidia-pin-toggle.sh status
 
-Toggle on/off:
+# Toggle pin on/off
 sudo ./nvidia-pin-toggle.sh toggle
 ```
