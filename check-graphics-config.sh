@@ -12,8 +12,13 @@ uname -r >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
 echo "=== Graphics Information ===" >> "$OUTPUT_FILE"
-inxi -G >> "$OUTPUT_FILE"
+nvidia-smi >> "$OUTPUT_FILE"
+modinfo nvidia | grep -E 'version|vermagic' >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
+
+echo "=== Display Protocol ===" >> "$OUTPUT_FILE"
+echo $XDG_SESSION_TYPE >> "$OUTPUT_FILE"
+
 
 #echo "=== Installed NVIDIA Package ===" >> "$OUTPUT_FILE"
 #dpkg -l | grep -E "nvidia-driver|nvidia.*-open" | grep "^ii" >> "$OUTPUT_FILE"
