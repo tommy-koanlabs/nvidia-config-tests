@@ -26,7 +26,7 @@ sudo apt autoremove
 
 
 apt search 'linux-modules-nvidia.*6.8.0-86'
-sudo apt install linux-modules-nvidia-570-6.11.0-29-generic
+sudo apt install linux-modules-nvidia-570-6.8.0-86-generic
 
 Check modules for kernel:
 sudo apt-cache policy linux-modules-nvidia-570-$(uname -r)
@@ -39,13 +39,17 @@ sudo apt install nvidia-driver-570
 sudo apt-mark hold $(dpkg -l | grep '^ii' | grep -E 'nvidia.*570|6\.8\.0-86' | awk '{print $2}')
 ```
 # These are the parameters Im using, see what works on your system. This is just an example
-# Modify modprobe and grub settings
+# Modify modprobe settings
 sudo nano /etc/modprobe.d/nvidia.conf
+# Add these lines:
 options nvidia_drm modeset=1
 options nvidia_drm fbdev=1
 options nvidia NVreg_EnableGpuFirmware=0
+options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
 
+# Modify GRUB settings (only showing NVIDIA-relevant parameters below)
 sudo nano /etc/default/grub
+# Add to GRUB_CMDLINE_LINUX:
 GRUB_CMDLINE_LINUX="nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0"
 
 # These settings will allow you to choose the default kernel in grub, you can change GRUB_TIMEOUT_STYLE to hidden once your system is working
@@ -55,12 +59,15 @@ GRUB_TIMEOUT_STYLE=menu
 
 sudo update-grub
 
-# systemd services
+# Enable systemd services for suspend/resume support
 sudo systemctl enable nvidia-suspend.service
 sudo systemctl enable nvidia-hibernate.service
 sudo systemctl enable nvidia-resume.service
 
-# Finally run the shell script again to record the new system configuration
+# Reboot to apply all changes
+sudo reboot
+
+# After reboot, run the shell script again to verify the configuration
 sudo ./check-graphics-config.sh
 
 ## Common GRUB Parameters for NVIDIA
