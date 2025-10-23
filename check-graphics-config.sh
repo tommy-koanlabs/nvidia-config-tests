@@ -25,5 +25,23 @@ echo "" >> "$OUTPUT_FILE"
 
 echo "=== Current Boot Parameters ===" >> "$OUTPUT_FILE"
 cat /proc/cmdline >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "=== Modprobe Configuration ===" >> "$OUTPUT_FILE"
+if [ -f /etc/modprobe.d/nvidia.conf ]; then
+    cat /etc/modprobe.d/nvidia.conf >> "$OUTPUT_FILE"
+else
+    echo "No /etc/modprobe.d/nvidia.conf found" >> "$OUTPUT_FILE"
+fi
+echo "" >> "$OUTPUT_FILE"
+
+echo "=== NVIDIA Systemd Services ===" >> "$OUTPUT_FILE"
+for service in nvidia-suspend nvidia-hibernate nvidia-resume nvidia-powerd nvidia-persistenced; do
+    if systemctl list-unit-files | grep -q "^${service}.service"; then
+        status=$(systemctl is-enabled ${service}.service 2>&1)
+        echo "${service}.service: $status" >> "$OUTPUT_FILE"
+    fi
+done
+echo "" >> "$OUTPUT_FILE"
 
 echo "Configuration saved to: $OUTPUT_FILE"

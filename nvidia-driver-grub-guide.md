@@ -286,3 +286,20 @@ sudo apt update
 ---
 
 **Always backup your system before major driver changes!**
+
+  What you're observing is that ubuntu-drivers list shows the available driver packages, not necessarily which kernel modules are currently installed or active. The output is the same regardless of which kernel you're booted into
+  because it's showing what's available in the repositories for the HWE kernel track.
+
+  The key difference between running 6.8 vs 6.14 would be:
+
+  1. Which actual kernel modules are loaded: When you boot into 6.14, the system loads modules compiled for 6.14. When you boot into 6.8, it loads modules for 6.8.
+  2. Which module packages are installed: You likely have multiple versions installed simultaneously.
+
+  To see what's actually installed and for which kernels:
+
+  dpkg -l | grep linux-modules-nvidia | grep -E '(6\.8|6\.14)'
+
+  And to see what's currently loaded:
+
+  lsmod | grep nvidia
+  modinfo nvidia | grep -E 'version|vermagic'
