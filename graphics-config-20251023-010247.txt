@@ -1,0 +1,129 @@
+=== Graphics Configuration Report ===
+Generated: Thu Oct 23 01:02:47 AM EDT 2025
+
+=== Operating System ===
+PRETTY_NAME="KDE neon User Edition"
+NAME="KDE neon"
+VERSION_ID="24.04"
+VERSION="User Edition"
+VERSION_CODENAME=noble
+ID=neon
+ID_LIKE="ubuntu debian"
+HOME_URL="https://neon.kde.org/"
+SUPPORT_URL="https://neon.kde.org/"
+BUG_REPORT_URL="https://bugs.kde.org/"
+PRIVACY_POLICY_URL="https://kde.org/privacypolicy/"
+UBUNTU_CODENAME=noble
+LOGO=start-here-kde-neon
+=== Linux Kernel Version ===
+6.8.0-86-generic
+
+=== Graphics Information ===
+Thu Oct 23 01:02:47 2025       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 570.195.03             Driver Version: 570.195.03     CUDA Version: 12.8     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4060 ...    Off |   00000000:01:00.0  On |                  N/A |
+| N/A   39C    P8              1W /   55W |     753MiB /   8188MiB |      6%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1218      G   /usr/lib/xorg/Xorg                       14MiB |
+|    0   N/A  N/A            1364      G   /usr/bin/kwin_wayland                    65MiB |
+|    0   N/A  N/A            1434      G   /usr/bin/Xwayland                         6MiB |
+|    0   N/A  N/A            1476      G   /usr/bin/ksmserver                        2MiB |
+|    0   N/A  N/A            1482      G   /usr/bin/kded6                            2MiB |
+|    0   N/A  N/A            1492      G   /usr/bin/plasmashell                    131MiB |
+|    0   N/A  N/A            1587      G   /usr/bin/kaccess                          2MiB |
+|    0   N/A  N/A            1588      G   ...it-kde-authentication-agent-1          2MiB |
+|    0   N/A  N/A            1592      G   ...ibexec/xdg-desktop-portal-kde          2MiB |
+|    0   N/A  N/A            1686      G   /usr/bin/ksecretd                         2MiB |
+|    0   N/A  N/A            1812      G   /usr/bin/kdeconnectd                      2MiB |
+|    0   N/A  N/A            1875      G   ...-gnu/libexec/DiscoverNotifier          2MiB |
+|    0   N/A  N/A            1903      G   /usr/lib/firefox/firefox                268MiB |
+|    0   N/A  N/A            1958      G   /usr/bin/systemsettings                  86MiB |
+|    0   N/A  N/A            1965      G   /usr/bin/plasma-discover                 31MiB |
+|    0   N/A  N/A            1966      G   /usr/bin/kate                             2MiB |
+|    0   N/A  N/A            1968      G   /usr/bin/konsole                          2MiB |
+|    0   N/A  N/A            3146      G   /usr/bin/kwalletd6                        2MiB |
+|    0   N/A  N/A            3648      G   /usr/bin/dolphin                          2MiB |
+|    0   N/A  N/A            3716      G   /usr/bin/kate                             2MiB |
+|    0   N/A  N/A            7518      G   /usr/bin/kate                             2MiB |
+|    0   N/A  N/A            7590      G   /usr/bin/kate                             2MiB |
+|    0   N/A  N/A            7693      G   /usr/bin/kate                             2MiB |
++-----------------------------------------------------------------------------------------+
+
+version:        570.195.03
+srcversion:     A53C2CD6D3985428C6C80FB
+vermagic:       6.8.0-86-generic SMP preempt mod_unload modversions 
+
+=== Display Protocol ===
+wayland
+
+
+=== GRUB Configuration ===
+# If you change this file, run 'update-grub' afterwards to update
+# /boot/grub/grub.cfg.
+# For full documentation of the options in this file, see:
+#   info -f grub -n 'Simple configuration'
+
+GRUB_DEFAULT=0
+GRUB_TIMEOUT_STYLE=menu
+GRUB_TIMEOUT=0
+GRUB_DISTRIBUTOR='KDE neon User Edition'
+GRUB_CMDLINE_LINUX_DEFAULT='quiet splash'
+GRUB_CMDLINE_LINUX="mem_sleep_default=deep quiet nvme_load=YES loglevel=3 resume=UUID=8ee02c29-527d-4277-a315-3c580a1a294e"
+
+# If your computer has multiple operating systems installed, then you
+# probably want to run os-prober. However, if your computer is a host
+# for guest OSes installed via LVM or raw disk devices, running
+# os-prober can cause damage to those guest OSes as it mounts
+# filesystems to look for things.
+#GRUB_DISABLE_OS_PROBER=false
+
+# Uncomment to enable BadRAM filtering, modify to suit your needs
+# This works with Linux (no patch required) and with any kernel that obtains
+# the memory map information from GRUB (GNU Mach, kernel of FreeBSD ...)
+#GRUB_BADRAM="0x01234567,0xfefefefe,0x89abcdef,0xefefefef"
+
+# Uncomment to disable graphical terminal
+#GRUB_TERMINAL=console
+
+# The resolution used on graphical terminal
+# note that you can use only modes which your graphic card supports via VBE
+# you can see them in real GRUB with the command `vbeinfo'
+#GRUB_GFXMODE=640x480
+
+# Uncomment if you don't want GRUB to pass "root=UUID=xxx" parameter to Linux
+#GRUB_DISABLE_LINUX_UUID=true
+
+# Uncomment to disable generation of recovery mode menu entries
+#GRUB_DISABLE_RECOVERY="true"
+
+# Uncomment to get a beep at grub start
+#GRUB_INIT_TUNE="480 440 1"
+
+=== Current Boot Parameters ===
+BOOT_IMAGE=/boot/vmlinuz-6.8.0-86-generic root=UUID=4affc08e-fc6a-49ff-88c7-26accf8b6ae2 ro mem_sleep_default=deep quiet nvme_load=YES loglevel=3 resume=UUID=8ee02c29-527d-4277-a315-3c580a1a294e quiet splash vt.handoff=7
+
+=== Modprobe Configuration ===
+options nvidia_drm modeset=1
+options nvidia_drm fbdev=1
+options nvidia NVreg_EnableGpuFirmware=0
+options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
+
+=== NVIDIA Systemd Services ===
+nvidia-suspend.service: enabled
+nvidia-hibernate.service: enabled
+nvidia-resume.service: enabled
+nvidia-persistenced.service: static
+

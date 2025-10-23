@@ -3,8 +3,15 @@
 
 OUTPUT_FILE="graphics-config-$(date +%Y%m%d-%H%M%S).txt"
 
+
+
 echo "=== Graphics Configuration Report ===" > "$OUTPUT_FILE"
 echo "Generated: $(date)" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
+
+echo "=== Operating System ===" >> "$OUTPUT_FILE"
+cat /etc/os-release >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
 echo "=== Linux Kernel Version ===" >> "$OUTPUT_FILE"
@@ -13,16 +20,22 @@ echo "" >> "$OUTPUT_FILE"
 
 echo "=== Graphics Information ===" >> "$OUTPUT_FILE"
 nvidia-smi >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
 modinfo nvidia | grep -E 'version|vermagic' >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
 echo "=== Display Protocol ===" >> "$OUTPUT_FILE"
 echo $XDG_SESSION_TYPE >> "$OUTPUT_FILE"
-
+echo "" >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
 
 #echo "=== Installed NVIDIA Package ===" >> "$OUTPUT_FILE"
 #dpkg -l | grep -E "nvidia-driver|nvidia.*-open" | grep "^ii" >> "$OUTPUT_FILE"
 #echo "" >> "$OUTPUT_FILE"
+
+echo "=== Package Holds ===" >> "$OUTPUT_FILE"
+apt-mark showholds >> "$OUTPUT_FILE"
+echo "" >> "$OUTPUT_FILE"
 
 echo "=== GRUB Configuration ===" >> "$OUTPUT_FILE"
 cat /etc/default/grub >> "$OUTPUT_FILE"

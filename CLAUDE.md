@@ -3,61 +3,63 @@ This project is dedicated to debugging the installation of Nvidia drivers on a K
 
 ## Current System Information
 - OS: KDE Neon
-- Kernel: Linux 6.11.0-29-generic
-- NVIDIA Driver: 550
+- Kernel: Linux 6.8.0-86-generic (target default boot kernel)
+- Current Kernel: Linux 6.14.0-33-generic (testing)
+- NVIDIA Driver: 570.195.03
+- GPU: NVIDIA GeForce RTX 4060 Mobile
+- Display Protocol: Wayland
 - Platform: linux
+- Status: ✅ **FULLY OPERATIONAL** (as of 2025-10-23)
 
-## NVIDIA Driver Installation Progress
+## System Configuration (Completed - 2025-10-23)
 
-### Completed Steps
-1. ✅ **Module Installation Verification** (2025-10-22)
-   - Verified NVIDIA kernel modules are installed for kernel 6.11.0-29-generic
-   - Package: `linux-modules-nvidia-550-6.11.0-29-generic`
-   - Version: `6.11.0-29.29~24.04.1+3`
-   - Status: Installed and up-to-date
+### NVIDIA Driver Installation ✅
+- **Driver Version**: 570.195.03
+- **CUDA Version**: 12.8
+- **Kernel Modules**: Properly loaded for kernel 6.8.0-86-generic
+- **Display Manager**: Working with Wayland
+- **GPU Utilization**: Confirmed working with KDE Plasma and applications
 
-   **Verification command:**
-   ```bash
-   sudo apt-cache policy linux-modules-nvidia-550-$(uname -r)
-   ```
+### Hibernation Setup ✅
+All hibernation configuration completed and operational:
 
-   **Common Issue Encountered:** When using environment variables like `${DRIVER_BRANCH}`, ensure they're expanded before passing to `sudo`. Use direct values or wrap in shell command: `sudo sh -c 'DRIVER_BRANCH=550 apt-cache policy ...'`
+1. ✅ **Swap Partition Created**
+   - Device: `/dev/nvme1n1p3`
+   - UUID: `8ee02c29-527d-4277-a315-3c580a1a294e`
+   - Size: 24GB (1.5x RAM)
 
-### Next Steps
-- Continue with remaining steps from Ubuntu NVIDIA driver installation documentation
-- Reference: https://documentation.ubuntu.com/server/how-to/graphics/install-nvidia-drivers/
+2. ✅ **System Configuration**
+   - `/etc/fstab`: Swap partition configured
+   - GRUB: Resume parameter added to `GRUB_CMDLINE_LINUX`
+   - Boot parameters verified in `/proc/cmdline`
 
-## Hibernation Setup (In Progress - 2025-10-23)
+3. ✅ **NVIDIA Hibernation Services**
+   - `nvidia-suspend.service`: enabled
+   - `nvidia-hibernate.service`: enabled
+   - `nvidia-resume.service`: enabled
+   - `nvidia-persistenced.service`: static
 
-### Completed Steps
-- ✅ Decided on 24GB swap partition size (1.5x RAM)
-- ✅ Created swap partition at `/dev/nvme1n1p3` with GParted
-- ✅ Initialized swap partition with `mkswap`
-- ✅ Activated swap partition with `swapon`
-- ✅ Updated `/etc/fstab` with swap partition entry:
-  ```
-  UUID=8ee02c29-527d-4277-a315-3c580a1a294e none swap sw 0 0
-  ```
-- ✅ Verified swap is active and working (23GB available)
-- ✅ Old swapfile was already removed (not present in /etc/fstab)
+### NVIDIA Module Configuration
+Located in `/etc/modprobe.d/nvidia.conf`:
+```
+options nvidia_drm modeset=1
+options nvidia_drm fbdev=1
+options nvidia NVreg_EnableGpuFirmware=0
+options nvidia NVreg_PreserveVideoMemoryAllocations=1 NVreg_TemporaryFilePath=/var/tmp
+```
 
-### Current Task
-Update GRUB with resume parameter and test hibernation.
+### GRUB Boot Parameters
+Current configuration (`/etc/default/grub`):
+```
+GRUB_SAVEDEFAULT=true
+GRUB_DEFAULT=saved
+GRUB_CMDLINE_LINUX="nvidia_drm.modeset=1 nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia.NVreg_EnableGpuFirmware=0 quiet nvme_load=YES loglevel=3 resume=UUID=8ee02c29-527d-4277-a315-3c580a1a294e"
+GRUB_CMDLINE_LINUX_DEFAULT='quiet splash'
+```
 
-### Next Steps
-1. ⏸️ **IN PROGRESS**: Edit `/etc/default/grub` and add resume parameter:
-   ```
-   GRUB_CMDLINE_LINUX_DEFAULT='quiet splash resume=UUID=8ee02c29-527d-4277-a315-3c580a1a294e'
-   ```
-2. ⏸️ Run `sudo update-grub` to update boot configuration
-3. ⏸️ Reboot system
-4. ⏸️ Test hibernation with `systemctl hibernate`
+**Note**: Using `GRUB_SAVEDEFAULT=true` and `GRUB_DEFAULT=saved` to persist the last selected kernel boot option. This allows manual selection of 6.8.0-86-generic as the default.
 
-### Swap Partition Details
-- **Device**: `/dev/nvme1n1p3`
-- **UUID**: `8ee02c29-527d-4277-a315-3c580a1a294e`
-- **Size**: 24GB
-- **PARTUUID**: `a9c0e13d-bb02-40b9-8c10-6074b96bbf1a`
+**Critical Note**: The `acpi.ec_no_wakeup=1` parameter that previously caused display issues has been removed.
 
 ## Directory Contents
 - `check-graphics-config.sh` - Graphics configuration check script
