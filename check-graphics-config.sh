@@ -9,10 +9,16 @@ echo "=== Graphics Configuration Report ===" > "$OUTPUT_FILE"
 echo "Generated: $(date)" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 
+
+
 echo "=== Operating System ===" >> "$OUTPUT_FILE"
 cat /etc/os-release >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
+
+
+echo "=== Hardware ===" >> "$OUTPUT_FILE"
+sudo dmidecode -t system >> "$OUTPUT_FILE"
 
 echo "=== Linux Kernel Version ===" >> "$OUTPUT_FILE"
 uname -r >> "$OUTPUT_FILE"
