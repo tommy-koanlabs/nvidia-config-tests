@@ -2,7 +2,9 @@
 
 ## Overview
 
-This documents the process I used to fix NVIDIA driver issues on a Lenovo LOQ 15ARP9 running KDE Neon. The system failed to wake from sleep (requiring hard reset) with newer kernels. After testing multiple kernel versions, only 6.8 worked reliably. Kernels 6.14 and 6.11 both had the same sleep/wake issues. I only found the kernel fix in an Arch forum after quite a bit of searching, and havent seen this tip elsewhere so I wanted to document it. 
+This documents the process I used to fix NVIDIA driver issues on a Lenovo LOQ 15ARP9 running KDE Neon. The system failed to wake from sleep (requiring hard reset) with newer kernels. After testing multiple kernel versions, only 6.8 worked reliably. Kernels 6.14 and 6.11 both had the same sleep/wake issues. I only found the kernel fix in an Arch forum after quite a bit of searching, and havent seen this tip elsewhere so I wanted to document it.
+
+The main piece of code is a shell script that logs several key system parameters to better track changes to settings.
 
 **System:** Lenovo LOQ 15ARP9
 **GPU:** NVIDIA GeForce RTX 4060 Mobile
