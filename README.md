@@ -186,3 +186,7 @@ sudo ./nvidia-pin-toggle.sh disable
 # Toggle pin on/off
 sudo ./nvidia-pin-toggle.sh toggle
 ```
+
+# Notes
+11/21/2025 - Black screen on resuming from suspend, mouse still visible. Attempting to remove nvidia_drm.modeset=1 from grub
+11/22/2025 - Issue persists. Adding nomodeset back, re-enabling gpu firmware, and switching to wayland. Also updating modprobe
